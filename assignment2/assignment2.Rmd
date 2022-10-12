@@ -1,0 +1,159 @@
+---
+title: "Group No.4 Assignment 1 Company Reputation Poll"
+author: Athbah Alrugibah, Alyazid Alhumaydani, Dhawi Almajnouni, Hassan AlTamimi,
+  Mariam Busaleh
+date: "2022-10-13"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidytuesdayR)
+library(ggplot2)
+library(DataExplorer)
+library(randomcoloR)
+```
+
+## 1.Introduction
+
+The Axios-Harris Poll 100 is a trusted raking of the reputation of the
+companies most on the minds of Americans using a framework Harris has
+used since 1999.<http://theharrispoll.com/partners/media/axios-harrispoll-100/>
+
+## 2.Dataset
+**• Title:** 2022 Corporate Reputation and poll Rankings
+
+**• Year:** 2022
+
+**• Source:** Thomas Mock (2022). Tidy Tuesday: A weekly data project aimed at the R ecosystem. <https://github.com/rfordatascience/tidytuesday.>
+
+**• Purpose of Dataset:** A great dataset for beginners who is learning to work in data analysis and visualization.
+
+**• Content:** Reputation:company,industry,name,score,rank;poll: company	industry	2022_rank	2022_rq	change	year	rank	rq
+
+**• Structure:** Mainly consist of integers, floating point values also string
+
+**• Summary:** This dataset describes attributes of the Reputation and poll of Companies so the dataset can be make used to propose exploratory data analysis.
+
+## 3.Problem Statement 
+
+## 4.Objective
+
+## 5.EDA
+
+**Download all data files**
+
+```{r, echo=FALSE}
+#tuesdata <- tidytuesdayR::tt_load('2022-05-31')
+poll <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-05-31/poll.csv')
+reputation <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-05-31/reputation.csv')
+```
+
+**Individual data frames**
+
+```{r, echo=FALSE}
+#poll <- tuesdata$poll
+#reputation <- tuesdata$reputation
+
+poll
+reputation
+
+```
+
+**# Cleaning data (removes unwanted columns and NA entries )**
+
+```{r, echo=FALSE}
+ poll %>%
+  select(company,industry,year,rq) %>%
+  na.omit() -> poll
+
+reputation %>%
+  select(company,industry,name,score) -> reputation
+poll
+reputation
+ 
+```
+
+**# Overall Reputation score and RQ for each company **
+
+```{r, echo=FALSE}
+  aggregate(reputation$score, list(reputation$company,
+                                 reputation$industry), FUN=mean) -> rep_overall
+c("company", "industry", "average_score") -> colnames(rep_overall)
+
+aggregate(poll$rq, list(poll$company,
+                        poll$industry), FUN=mean) -> poll_overall
+ c("company", "industry", "average_rq") -> colnames(poll_overall)
+ poll_overall
+```
+
+**# Merging both data sets**
+
+```{r, echo=FALSE}
+total <- merge(poll_overall,rep_overall,by=c("company","industry"))
+total  
+```
+## Plot
+
+**# Creating Color Palette**
+
+```{r, echo=FALSE}
+n <- 20
+palette <- distinctColorPalette(n)
+```
+
+**# Plotting Overall Reputation, Poll, and their total**
+
+```{r, echo=FALSE}
+ggplot(rep_overall, aes(average_score, industry)) +
+  ggtitle("Industries' Reputation Scores") +
+  geom_point()
+
+ggplot(poll, aes(rq, industry)) + 
+  ggtitle("Industries' RQ") +
+  geom_point()
+
+ggplot(total, aes(average_rq, average_score, colour = industry)) +
+  ggtitle("RQ vs Reputation Score of Each Industry")+
+  geom_point() +
+  scale_color_manual(values = palette)
+```
+
+**#Hypothesis Testing**
+
+**#Overall Reputation hypothesis testing. The null hypothesis is groceries don't have a higher overall reputation than other industries**
+
+```{r, echo=FALSE}
+rep_overall[rep_overall$industry == "Groceries", ] -> rep_groceries
+
+rep_x <- mean(rep_groceries$average_score)
+rep_y <- mean(rep_overall$average_score) 
+rep_sd <- sd(rep_overall$average_score) 
+rep_n <- nrow(rep_groceries)
+(rep_x-rep_y)/(rep_sd/sqrt(rep_n)) -> rep_z
+
+if (rep_z > qnorm(p=.05, lower.tail=FALSE)) {
+  print("We reject the null hypothesis at the 5% significance level. The grocery industry does have a higher overall reputation than other industries")
+} else {
+  print("We fail to reject the null hypothesis at the 5% significance level. The grocery industry doesn't have a higher overall reputation than other industries")
+}  
+```
+
+**#Poll hypothesis testing, The null hypothesis is groceries don't have a higher RQ than other industries**
+
+```{r, echo=FALSE}
+poll[poll$industry == "Groceries", ] -> poll_groceries
+
+poll_x <- mean(poll_groceries$rq)
+poll_y <- mean(poll$rq)
+poll_sd <- sd(poll$rq)
+poll_n <- nrow(poll_groceries)
+(poll_x-poll_y)/(poll_sd/sqrt(poll_n)) -> poll_z
+
+if (poll_z > qnorm(p=.05, lower.tail=FALSE)) {
+  print("We reject the null hypothesis at the 5% significance level. The grocery industry does have a higher rq than other industries")
+} else {
+  print("We fail to reject the null hypothesis at the 5% significance level. The grocery industry doesn't have a higher rq than other industries")
+}  
+```
