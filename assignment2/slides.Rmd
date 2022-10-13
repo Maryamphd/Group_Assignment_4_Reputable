@@ -104,7 +104,10 @@ ggplot(data = industryRQ, mapping = aes(x = reorder(industry, -rq_avg), rq_avg))
 ## 7. Hypothesis
 
  **Our current hypothesis is:** 
-  The grocery industry have a significantly better reputation than other industries. 
+ 
+•  The grocery industry have a significantly better reputation than other industries.
+
+•  The Airline industry have a significantly worse reputation than other industries.
 
 ## 8. Further Investigation
 
