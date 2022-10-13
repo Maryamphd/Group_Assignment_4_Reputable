@@ -14,8 +14,8 @@ library(skimr)
 
 # Import all data files
 
-poll <- read.csv("data/poll.csv")
-reputation <- read.csv("data/reputation.csv")
+poll <- read.csv("../data/poll.csv")
+reputation <- read.csv("../data/reputation.csv")
 
 
 ## Organization
