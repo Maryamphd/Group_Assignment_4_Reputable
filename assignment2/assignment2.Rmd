@@ -13,6 +13,34 @@ library(tidytuesdayR)
 library(ggplot2)
 library(DataExplorer)
 library(randomcoloR)
+
+# Import all data files
+
+poll <- read.csv("../data/poll.csv")
+reputation <- read.csv("../data/reputation.csv")
+
+
+## Organization
+
+
+# Combining both data sets and removing NA values 
+
+reputation %>%
+  group_by(company, industry) %>%
+  summarise(score_avg = mean(score,na.rm = TRUE)) -> reputation
+poll %>%
+  group_by(company, industry) %>%
+  summarise(rq_avg = mean(rq,na.rm = TRUE)) %>%
+  full_join(reputation) %>%
+  na.omit() -> total
+# ^ added na.omit() because 3 of the observations had NA rq (Big Lots,Shein,Stellantis)
+
+# Average RQ per Industry
+total %>%
+  group_by(industry) %>%
+  summarise(rq_avg = mean(rq_avg)) -> industryRQ
+coeff <- cor(total$rq_avg,total$score_avg)
+
 ```
 
 ## 1.Introduction
@@ -22,6 +50,7 @@ companies most on the minds of Americans using a framework Harris has
 used since 1999.<http://theharrispoll.com/partners/media/axios-harrispoll-100/>
 
 ## 2.Dataset
+
 **• Title:** 2022 Corporate Reputation and poll Rankings
 
 **• Year:** 2022
@@ -36,44 +65,31 @@ used since 1999.<http://theharrispoll.com/partners/media/axios-harrispoll-100/>
 
 **• Summary:** This dataset describes attributes of the Reputation and poll of Companies so the dataset can be make used to propose exploratory data analysis.
 
-## 3.Problem Statement 
+## 3.Organization
 
-## 4.Objective
+We've decided to find the average score of all reputation attributes and the reputation quotient (RQ) for each company and add them both into one data set for cleaner and easier exploration.
 
+  Reputation Attributes Score -> Average Reputation\n
+  
+  Reputation Quotient -> Average Reputation Quotient\n
+    
+  Merge Both Averages
+  
 ## 5.EDA
 
-**Download all data files**
-
 ```{r, echo=FALSE}
-#tuesdata <- tidytuesdayR::tt_load('2022-05-31')
-poll <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-05-31/poll.csv')
-reputation <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-05-31/reputation.csv')
+unique(total$industry) #19 industries
+
+glimpse(total)
+
+summary(total)
+
+create_report(total)
+
+skim(total) #Perform skim to display summary statistics, skim() - expands on summary() by providing larger set of statistics
 ```
 
-**Individual data frames**
 
-```{r, echo=FALSE}
-#poll <- tuesdata$poll
-#reputation <- tuesdata$reputation
-
-poll
-reputation
-
-```
-
-**# Cleaning data (removes unwanted columns and NA entries )**
-
-```{r, echo=FALSE}
- poll %>%
-  select(company,industry,year,rq) %>%
-  na.omit() -> poll
-
-reputation %>%
-  select(company,industry,name,score) -> reputation
-poll
-reputation
- 
-```
 
 **# Overall Reputation score and RQ for each company **
 
@@ -96,64 +112,42 @@ total
 ```
 ## Plot
 
-**# Creating Color Palette**
+**Average Reputation Score vs. Reputation Quotient (RQ)**
 
-```{r, echo=FALSE}
-n <- 20
-palette <- distinctColorPalette(n)
-```
-
-**# Plotting Overall Reputation, Poll, and their total**
-
-```{r, echo=FALSE}
-ggplot(rep_overall, aes(average_score, industry)) +
-  ggtitle("Industries' Reputation Scores") +
-  geom_point()
-
-ggplot(poll, aes(rq, industry)) + 
-  ggtitle("Industries' RQ") +
-  geom_point()
-
-ggplot(total, aes(average_rq, average_score, colour = industry)) +
-  ggtitle("RQ vs Reputation Score of Each Industry")+
+With a correlation coefficient of 0.89. We can say Reputation Quotient score is a good representation for a company's reputation")
+```{r plot 1, echo=FALSE}
+ggplot(total, aes(rq_avg, score_avg)) +
   geom_point() +
-  scale_color_manual(values = palette)
+  labs(x= "Poll Score", y="Reputation Score") +
+  geom_smooth(formula = y ~ x, method = "lm")
 ```
 
-**#Hypothesis Testing**
 
-**#Overall Reputation hypothesis testing. The null hypothesis is groceries don't have a higher overall reputation than other industries**
+Average Reputation Quotient of each Industry
+```{r plot 2, echo=FALSE}
+# Bar Plot - Average RQ per industry
 
-```{r, echo=FALSE}
-rep_overall[rep_overall$industry == "Groceries", ] -> rep_groceries
-
-rep_x <- mean(rep_groceries$average_score)
-rep_y <- mean(rep_overall$average_score) 
-rep_sd <- sd(rep_overall$average_score) 
-rep_n <- nrow(rep_groceries)
-(rep_x-rep_y)/(rep_sd/sqrt(rep_n)) -> rep_z
-
-if (rep_z > qnorm(p=.05, lower.tail=FALSE)) {
-  print("We reject the null hypothesis at the 5% significance level. The grocery industry does have a higher overall reputation than other industries")
-} else {
-  print("We fail to reject the null hypothesis at the 5% significance level. The grocery industry doesn't have a higher overall reputation than other industries")
-}  
+ggplot(data = industryRQ, mapping = aes(x = reorder(industry, -rq_avg), rq_avg)) + 
+  geom_bar(stat = "identity") +
+  labs(y= "RQ Average",x= "Industry") +
+  geom_text(aes(label = round(rq_avg, digits = 0), vjust = 1.5)) +
+  scale_x_discrete(guide = guide_axis(angle = 90))
 ```
 
-**#Poll hypothesis testing, The null hypothesis is groceries don't have a higher RQ than other industries**
 
-```{r, echo=FALSE}
-poll[poll$industry == "Groceries", ] -> poll_groceries
+**# 7. Hypothesis**
 
-poll_x <- mean(poll_groceries$rq)
-poll_y <- mean(poll$rq)
-poll_sd <- sd(poll$rq)
-poll_n <- nrow(poll_groceries)
-(poll_x-poll_y)/(poll_sd/sqrt(poll_n)) -> poll_z
+ **Our current hypothesis is:** 
+ 
+•  The grocery industry have a significantly better reputation than other industries.
 
-if (poll_z > qnorm(p=.05, lower.tail=FALSE)) {
-  print("We reject the null hypothesis at the 5% significance level. The grocery industry does have a higher rq than other industries")
-} else {
-  print("We fail to reject the null hypothesis at the 5% significance level. The grocery industry doesn't have a higher rq than other industries")
-}  
-```
+•  The Airline industry have a significantly worse reputation than other industries.
+
+
+**# 8. Further Investigation**
+
+**In the future we hope to:**
+
+• Test our hypothesis using a suitable test.
+
+• Further investigate for other correlations
