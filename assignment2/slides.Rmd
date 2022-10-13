@@ -1,0 +1,115 @@
+---
+title: "Group No.4 Assignment 1 Company Reputation Poll"
+author: Athbah Alrugibah, Alyazid Alhumaydani, Dhawi Almajnouni, Hassan AlTamimi,
+  Mariam Busaleh
+date: "2022-10-13"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(tidytuesdayR)
+library(ggplot2)
+library(DataExplorer)
+library(randomcoloR)
+
+# Import all data files
+
+poll <- read.csv("../data/poll.csv")
+reputation <- read.csv("../data/reputation.csv")
+
+
+## Organization
+
+
+# Combining both data sets and removing NA values 
+
+reputation %>%
+  group_by(company, industry) %>%
+  summarise(score_avg = mean(score,na.rm = TRUE)) -> reputation
+poll %>%
+  group_by(company, industry) %>%
+  summarise(rq_avg = mean(rq,na.rm = TRUE)) %>%
+  full_join(reputation) %>%
+  na.omit() -> total
+# ^ added na.omit() because 3 of the observations had NA rq (Big Lots,Shein,Stellantis)
+
+# Average RQ per Industry
+total %>%
+  group_by(industry) %>%
+  summarise(rq_avg = mean(rq_avg)) -> industryRQ
+coeff <- cor(total$rq_avg,total$score_avg)
+
+```
+
+## 1.Introduction
+
+The Axios-Harris Poll 100 is a trusted raking of the reputation of the
+companies most on the minds of Americans using a framework Harris has
+used since 1999.<http://theharrispoll.com/partners/media/axios-harrispoll-100/>
+
+## 2.Dataset
+**• Title:** 2022 Corporate Reputation and poll Rankings
+
+**• Year:** 2022
+
+**• Source:** Thomas Mock (2022). Tidy Tuesday: A weekly data project aimed at the R ecosystem. <https://github.com/rfordatascience/tidytuesday.>
+
+**• Purpose of Dataset:** Find the top 100 companies' Reputation Quotient 
+
+**• Content:** Reputation:company,industry,name,score,rank;
+              Poll: company	industry	2022_rank	2022_rq	change	year	rank	rq
+
+**• Summary:** This data set describes attributes of the Reputation and poll of Companies so the data set can be make used to propose exploratory data analysis.
+
+## 3.Organization
+
+We've decided to find the average score of all reputation attributes and the reputation quotient (RQ) for each company and add them both into one data set for cleaner and easier exploration.
+
+  Reputation Attributes Score -> Average Reputation\n
+  
+  Reputation Quotient -> Average Reputation Quotient\n
+    
+  Merge Both Averages
+
+## 4. EDA (Unique Industries and Summary)
+```{r EDA, echo=FALSE}
+unique(total$industry) #19 industries
+
+summary(total)
+```
+
+## 5. Average Reputation Score vs. Reputation Quotient (RQ)
+With a correlation coefficient of 0.89. We can say Reputation Quotient score is a good representation for a company's reputation")
+```{r plot 1, echo=FALSE}
+ggplot(total, aes(rq_avg, score_avg)) +
+  geom_point() +
+  labs(x= "Poll Score", y="Reputation Score") +
+  geom_smooth(formula = y ~ x, method = "lm")
+```
+
+
+## 6. Average Reputation Quotient of each Industry
+```{r plot 2, echo=FALSE}
+# Bar Plot - Average RQ per industry
+
+ggplot(data = industryRQ, mapping = aes(x = reorder(industry, -rq_avg), rq_avg)) + 
+  geom_bar(stat = "identity") +
+  labs(y= "RQ Average",x= "Industry") +
+  geom_text(aes(label = round(rq_avg, digits = 0), vjust = 1.5)) +
+  scale_x_discrete(guide = guide_axis(angle = 90))
+```
+
+## 7. Hypothesis
+
+ **Our current hypothesis is:** 
+  The grocery industry have a significantly better reputation than other industries. 
+
+## 8. Further Investigation
+
+**In the future we hope to:**
+
+• Test our hypothesis using a suitable test.
+
+• Further investigate for other correlations
