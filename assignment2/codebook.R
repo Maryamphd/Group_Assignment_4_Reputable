@@ -25,19 +25,21 @@ reputation <- read.csv("data/reputation.csv")
 
 reputation %>%
   group_by(company, industry) %>%
-  summarise(score_avg = mean(score)) -> reputation
+  summarise(score_avg = mean(score,na.rm = TRUE)) -> reputation
 poll %>%
   group_by(company, industry) %>%
-  summarise(rq_avg = mean(rq)) %>%
+  summarise(rq_avg = mean(rq,na.rm = TRUE)) %>%
   full_join(reputation) %>%
-  na.omit()-> total
+  na.omit() -> total
+
+?mean()
+
 # ^ added na.omit() because 3 of the observations had NA rq (Big Lots,Shein,Stellantis)
 
 # Average RQ per Industry
 total %>%
   group_by(industry) %>%
   summarise(rq_avg = mean(rq_avg)) -> industryRQ
-industryRQ[order(-industryRQ$rq_avg),] -> industryRQ
 
 
 ##EDA
@@ -51,7 +53,7 @@ glimpse(total)
 
 summary(total)
 
-create_report(total)
+#create_report(total)
 
 skim(total) #Perform skim to display summary statistics, skim() - expands on summary() by providing larger set of statistics
 
