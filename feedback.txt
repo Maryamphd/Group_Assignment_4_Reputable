@@ -1,0 +1,24 @@
+
+
+## The dataset and your approach towards analyzing it was very intriguing .As a group, we were interested by the conclusion that you came up with so Great Job :)
+
+
+## problem statement and Objective did not write anything in them
+
+
+## It would of been helpful to know why the NA's values were removed from the dataset?
+
+
+## graphs shown in report are diffrent than the presentation.
+
+
+## Graph on slide #7, it is not clear the ranking for the industry reputation is based on all the years in the dataset or only 2020?
+
+
+## what are the insight you gain from the graphs shown in report.
+
+ 
+## It would be great to show how some of the companies ranking improved or got worse over the years by doing some comparison over the different years.
+
+
+
