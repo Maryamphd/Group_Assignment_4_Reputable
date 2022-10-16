@@ -13,7 +13,12 @@ library(tidytuesdayR)
 library(ggplot2)
 library(DataExplorer)
 library(randomcoloR)
-
+library(skimr)
+library(tidyverse)
+library(BSDA)
+library(gridExtra)
+library(dplyr)
+library(skimr)
 # Import all data files
 
 poll <- read.csv("../data/poll.csv")
@@ -33,13 +38,15 @@ poll %>%
   summarise(rq_avg = mean(rq,na.rm = TRUE)) %>%
   full_join(reputation) %>%
   na.omit() -> total
+
+?mean()
+
 # ^ added na.omit() because 3 of the observations had NA rq (Big Lots,Shein,Stellantis)
 
 # Average RQ per Industry
 total %>%
   group_by(industry) %>%
   summarise(rq_avg = mean(rq_avg)) -> industryRQ
-coeff <- cor(total$rq_avg,total$score_avg)
 
 ```
 
@@ -47,7 +54,9 @@ coeff <- cor(total$rq_avg,total$score_avg)
 
 The Axios-Harris Poll 100 is a trusted raking of the reputation of the
 companies most on the minds of Americans using a framework Harris has
-used since 1999.<http://theharrispoll.com/partners/media/axios-harrispoll-100/>
+used since 1999. It is based on a survey of 33,096 Americans in a nationally representative sample . The two-step process starts fresh each year by surveying the public’s top-of-mind awareness of companies that either excel or falter in society. These 100 “most visible companies” are then rated by a second group of Americans across the seven key dimensions of reputation to determine the ranking.If a company is not on the list, it did not reach a critical level of visibility to be measured.
+
+<http://theharrispoll.com/partners/media/axios-harrispoll-100/>
 
 ## 2.Dataset
 
@@ -59,15 +68,25 @@ used since 1999.<http://theharrispoll.com/partners/media/axios-harrispoll-100/>
 
 **• Purpose of Dataset:** A great dataset for beginners who is learning to work in data analysis and visualization.
 
-**• Content:** Reputation:company,industry,name,score,rank;poll: company	industry	2022_rank	2022_rq	change	year	rank	rq
+**• Content:** Reputation:company,industry,name,score,rank;
+               poll: company, industry, 2022_rank, 2022_rq,change,year,rank rq
 
 **• Structure:** Mainly consist of integers, floating point values also string
 
 **• Summary:** This dataset describes attributes of the Reputation and poll of Companies so the dataset can be make used to propose exploratory data analysis.
 
 ## 3.Organization
-
+### 3.1 Checking for missing values
+After missing values checking, we found that the poll dataset has 333 NA’s values and the reputation dataset has no NA’s values.
+```{r, echo=FALSE}
+# Check for missing data
+sum(is.na(poll))
+sum(is.na(reputation))
+colSums(is.na(poll))
+```
+### 3.2 Organizing the datasets
 We've decided to find the average score of all reputation attributes and the reputation quotient (RQ) for each company and add them both into one data set for cleaner and easier exploration.
+The NA’s values have been found in four variables which are “change, year, rank, and rq”. Those variables’s values are important for the study and we drop them to get accurate result.
 
   Reputation Attributes Score -> Average Reputation\n
   
@@ -75,7 +94,7 @@ We've decided to find the average score of all reputation attributes and the rep
     
   Merge Both Averages
   
-## 5.EDA
+## 4.EDA
 
 ```{r, echo=FALSE}
 unique(total$industry) #19 industries
@@ -84,32 +103,12 @@ glimpse(total)
 
 summary(total)
 
-create_report(total)
+plot_missing(total)
 
-skim(total) #Perform skim to display summary statistics, skim() - expands on summary() by providing larger set of statistics
+skim(total) 
+#Perform skim to display summary statistics, skim() - expands on summary() by providing larger set of statistics
 ```
 
-
-
-**# Overall Reputation score and RQ for each company **
-
-```{r, echo=FALSE}
-  aggregate(reputation$score, list(reputation$company,
-                                 reputation$industry), FUN=mean) -> rep_overall
-c("company", "industry", "average_score") -> colnames(rep_overall)
-
-aggregate(poll$rq, list(poll$company,
-                        poll$industry), FUN=mean) -> poll_overall
- c("company", "industry", "average_rq") -> colnames(poll_overall)
- poll_overall
-```
-
-**# Merging both data sets**
-
-```{r, echo=FALSE}
-total <- merge(poll_overall,rep_overall,by=c("company","industry"))
-total  
-```
 ## Plot
 
 **Average Reputation Score vs. Reputation Quotient (RQ)**
@@ -135,7 +134,7 @@ ggplot(data = industryRQ, mapping = aes(x = reorder(industry, -rq_avg), rq_avg))
 ```
 
 
-**# 7. Hypothesis**
+## 5. Hypothesis
 
  **Our current hypothesis is:** 
  
@@ -144,10 +143,22 @@ ggplot(data = industryRQ, mapping = aes(x = reorder(industry, -rq_avg), rq_avg))
 •  The Airline industry have a significantly worse reputation than other industries.
 
 
-**# 8. Further Investigation**
+## 6. additional resources
+A study conducted by Insiders and titled "Americans say they trust major companies like Clorox, Amazon, and Publix to keep the country going during the pandemic more than they trust the government" followed the same methodology as our study.
 
-**In the future we hope to:**
+It aimed to understand the public view of companies and companies could efficiently play the role of federal government during pandemics. It included two groups as well as Phase I and Phase II, similar to our study. It included 34,000 American adults. 
 
-• Test our hypothesis using a suitable test.
+In phase I, survered group were asked about if certain companies performed better than the federal goverment during Covid-19 pandemic. 
 
-• Further investigate for other correlations
+In phase II, companies that were selected were ranked based of the best performance. 
+
+The study concluded that companies performed better than the federal government and supplied groceries to American people during the pandemic. In fact, 76% of surveyed believed the companies were more reliable than the federal government pertaining to securing groceres.
+
+Top companies ranked one to five included the following:
+- 1  The Clorox Company ranked in terms of ethics, products and services.
+
+The Hershey Company, Amazon, Publix, and General Milles were ranked the top 5 companies in the list. 
+
+Companies such as Procter & Gamble, Marker of Charmin, Bounty , and other hosehold essentials ranked 8 in the list. 
+
+Reference: <https://www.businessinsider.com/clorox-amazon-publix-more-trusted-government-2020-7>

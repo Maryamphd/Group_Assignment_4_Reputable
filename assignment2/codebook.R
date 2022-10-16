@@ -53,7 +53,9 @@ glimpse(total)
 
 summary(total)
 
-#create_report(total)
+plot_missing(total)
+
+create_report(total)
 
 skim(total) #Perform skim to display summary statistics, skim() - expands on summary() by providing larger set of statistics
 
