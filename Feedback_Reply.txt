@@ -1,0 +1,5 @@
+Thank you for your valuable comments, it will be under consideration.
+
+Graph on slide #7, it is not clear the ranking for the industry reputation is based on all the years in the dataset or only 2020?
+what are the insight you gain from the graphs shown in report.
+It would be great to show how some of the companies ranking improved or got worse over the years by doing some comparison over the different years.
